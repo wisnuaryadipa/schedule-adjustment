@@ -1,0 +1,130 @@
+var custCalendar = {
+    
+    Init: function(){
+        custCalendar.AddOrder();
+    },
+
+    AddOrder : function(){
+        $(document.createElement('a'))
+        .addClass('time-sch-time-button time-sch-time-button-addOrder time-sch-button')
+        .attr({
+                href: '#',
+                title: "TambahOrder"
+            })
+        .click(custCalendar.AddOrderClicked)
+        .append("TambahOrder")
+        .insertBefore(".time-sch-time-button-goto");
+    },
+
+    AddOrderClicked : function(){
+
+        item = {
+            id: 22,
+            name: '<div>Item 2</div><div>Sub Info</div>',
+            start: moment(today).add(3, 'hours'),
+            end: moment(today).add( 6, 'hours'),
+            sectionID: 3,
+            classes: 'item-status-three',
+            groupID: 1,
+            step: 2,
+        };
+        custCalendar.PushEvent(item);
+        TimeScheduler.Init();
+    },
+
+    PushEvent : function(item){
+        
+        // const range1 = moment.range( item.start, item.end);
+        // var range2 = moment.range(Calendar.Items[1].start, Calendar.Items[1].end);
+        // console.log(range1.overlaps(range2, { adjacent: false }))
+        if (custCalendar.IsScheduleOverlaping(item)) {
+            
+            Calendar.Items.push(item);
+
+        } else {
+            Calendar.Items.push(item);
+            console.log('event overlaping');
+        }
+        
+    },
+
+    IsScheduleOverlaping : function(itemz, idx = null, newOrder = null){
+        var result = false;
+
+        
+        const range1 = moment.range( itemz.start, itemz.end);
+        const section1 = itemz.sectionID;
+        indxCount = (idx) ? idx+1 : 0;
+        orderedCalendar = _.orderBy(Calendar.Items, ['groupID', 'step'], ['asc', 'asc']);
+        // orderedCalendar = _.filter(orderedCalendar,['groupID',1]);
+        
+        for (let index = indxCount; index < orderedCalendar.length; index++) {
+                addTime = custCalendar.CountHoursDiff(itemz,orderedCalendar[index]);
+                var range2 = moment.range(orderedCalendar[index].start, orderedCalendar[index].end);
+                var section2 = orderedCalendar[index].sectionID;
+
+                if (itemz.groupID == orderedCalendar[index].groupID) {
+                    if ( range1.overlaps(range2, { adjacent: false }) ) {
+
+                        result = false;
+                        var itemDump = orderedCalendar;
+
+                        console.log(moment(addTime).format('hours'));
+                        console.log(range1.diff('hours'));
+                        console.log(moment(itemDump[index].start).format("MMMM Do YYYY, h:mm:ss a"));
+                        console.log(moment(itemDump[index].end).format("MMMM Do YYYY, h:mm:ss a"));
+
+
+
+                            itemDump[index].start = itemDump[index].start + addTime;
+                            itemDump[index].end = itemDump[index].end + addTime;
+                            custCalendar.IsScheduleOverlaping(orderedCalendar[index], index);
+
+                        Calendar.Items = itemDump;
+                        break;
+                        
+                    } else {
+
+                        result = true;
+
+                    }
+                } else {
+                    if (section1 == section2) {
+                        result = false;
+                        var itemDump = orderedCalendar;
+
+                        console.log(moment(addTime).format('hours'));
+                        console.log(range1.diff('hours'));
+                        console.log(moment(itemDump[index].start).format("MMMM Do YYYY, h:mm:ss a"));
+                        console.log(moment(itemDump[index].end).format("MMMM Do YYYY, h:mm:ss a"));
+                            
+                        itemDump[index].start = itemDump[index].start ;
+                        itemDump[index].end = itemDump[index].end ;
+                        custCalendar.IsScheduleOverlaping(orderedCalendar[index], index);
+
+                        Calendar.Items = itemDump;
+                        break;
+                    }
+                        
+                    
+                }
+        }
+
+        return result;
+    },
+
+    CountHoursDiff : function(item, item2) {
+        var result = 0;
+            if (item.start > item2.start) {
+                result = moment.range(item.start,item.end) + moment.range(item2.start, item.start);
+            } else if (item.start == item2.start) {
+                result = moment.range(item.start,item.end);
+            } else {
+                result = moment.range(item2.start, item.end);
+            }
+        
+        
+
+        return result;
+    }
+}
